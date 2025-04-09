@@ -1,12 +1,15 @@
 import React from 'react'
 import { Link ,useNavigate} from 'react-router-dom'
 import { useState } from 'react';
+import { useDispatch , useSelector} from 'react-redux';
+import { signInStart,signInFailure,signInSuccess } from '../redux/user/userSlice';
+import OAuth from '../components/OAuth';
 
-export default function SignUp() {
+export default function SignIn() {
   const [formData,setFormData] = useState({});
-  const [error,setError] = useState(null);
-  const [loading,setLoading] = useState(false);
+  const {loading,error} = useSelector((state) => state.user);
   const navigate=useNavigate();
+  const dispatch = useDispatch();
 
   const handleChange = (e) => {
     setFormData({
@@ -17,7 +20,7 @@ export default function SignUp() {
   
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    dispatch(signInStart());
     try {
         const res = await fetch('/api/auth/signin', {
             method: 'POST',
@@ -30,21 +33,17 @@ export default function SignUp() {
         const data = await res.json();
 
         if (data.success === false) {
-            setError(data.message);
-            setLoading(false);
+            dispatch(signInFailure(data.message));
             return;
         }
 
-        setLoading(false);
-        setError(null);
-        setFormData({});
+        dispatch(signInSuccess(data));
         navigate('/');
         console.log("User Login Successfully!!");
         console.log(data);
     } catch (e) {
-        setError("An unexpected error occurred. Please try again.");
+        dispatch(signInFailure(e.message));
         console.error("Error during signin:", e);
-        setLoading(false);
     }
   }
 
@@ -56,12 +55,11 @@ export default function SignUp() {
         {/* <input type="text" placeholder='Username' className='border p-3 rounded-lg' id='username' onChange={handleChange}/> */}
         <input type="email" placeholder='Email' className='border p-3 rounded-lg' id='email' onChange={handleChange}/>
         <input type="password" placeholder='Password' className='border p-3 rounded-lg' id='password' onChange={handleChange}/>
-        <button disabled={loading} type='submit' className='p-3 bg-slate-700 text-white rounded-lg uppercase hover:opacity-90 disabled:opacity-80'>
+        <button disabled={loading} className='p-3 bg-slate-700 text-white rounded-lg uppercase hover:opacity-90 disabled:opacity-80'>
           {loading ? 'Loading...' : 'Sign In'}
         </button>
-        <button type='' className='p-3 bg-rose-600 text-white rounded-lg hover:opacity-90 disabled:opacity-80'>
-          Continue with Google
-        </button>
+        
+        <OAuth/>
       </form>
       <div className='flex gap-2 mt-5'>
         <p>New User?</p>
