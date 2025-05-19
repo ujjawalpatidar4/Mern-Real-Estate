@@ -1,15 +1,16 @@
-import User from '../models/User.model.js';
+import User from '../models/user.model.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { errorHandler } from '../utils/error.js';
 
 export const Signup = async (req, res,next) => {
     const { username, email, password } = req.body;
-    try {
-        
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = await User.create({ username, email, password:hashedPassword });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = await User.create({ username, email, password:hashedPassword });
 
-        res.status(201).json(newUser);
+    try {
+        await newUser.save();
+        res.status(201).json('User created successfully!');
     } catch (error) {
         next(error);
     }
@@ -20,16 +21,16 @@ export const SignIn = async (req, res,next) => {
     try{
         // check if user exists
         const UserExist = await User.findOne({email});
-        if(!UserExist) return next({statusCode:400,message:"User not found"});
+        if(!UserExist) return next(errorHandler(404, 'User not found!'));
         // check if password is correct
         const isPasswordCorrect = await bcrypt.compare(password, UserExist.password);
-        if(!isPasswordCorrect) return next({statusCode:401,message:"Invalid credentials"});
+        if(!isPasswordCorrect) return next(errorHandler(401, 'Wrong credentials!'));
 
 
         const token = jwt.sign({id:UserExist._id},process.env.JWT_SECRET,{expiresIn:"1d"});
-        const {password:pass,...user}= UserExist._doc;
+        const {password:pass,...rest}= UserExist._doc;
         
-        res.cookie("access_token",token,{httpOnly:true}).status(200).json({user});
+        res.cookie("access_token",token,{httpOnly:true}).status(200).json(rest);
 
     }
     catch(error){
@@ -43,7 +44,7 @@ export const GoogleSignIn = async (req, res,next) => {
         if(user){
             const token = jwt.sign({id:user._id,},process.env.JWT_SECRET,{expiresIn:"1d"});
             const {password:pass,...restData}= user._doc;
-            res.cookie('access_token',token,{httpOnly:true}).status(200).json({restData});
+            res.cookie('access_token',token,{httpOnly:true}).status(200).json(restData);
         }else{
             const randomPassword = Math.random().toString(36).slice(-8);   // this will generate random password using 0-9 and a to z , then slice gives us last 8 digits as password
             const hashedPassword = await bcrypt.hash(randomPassword, 10);
@@ -52,7 +53,8 @@ export const GoogleSignIn = async (req, res,next) => {
             await newUser.save();
             const token = jwt.sign({id:newUser._id,},process.env.JWT_SECRET,{expiresIn:"1d"});
             const {password:pass,...restData}= newUser._doc;
-            res.cookie("access_token",token,{httpOnly:true}).status(200).json({user:restData});
+            res.cookie("access_token",token,{httpOnly:true}).status(200).json(restData);
+            console.log(newUser.avatar);
         }
     } catch (error) {
         next(error);
