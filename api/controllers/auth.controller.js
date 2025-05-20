@@ -60,3 +60,14 @@ export const GoogleSignIn = async (req, res,next) => {
         next(error);
     }
 }    
+
+export const SignoutUser = async (req,res,next) => {
+    
+    try {
+        res.clearCookie('access_token')
+        res.status(200).json({ success: true, message: 'User has been Signed Out' }); 
+    } catch (error) {
+        console.log("Signout error : ",error);
+        next(error);
+    }
+  }

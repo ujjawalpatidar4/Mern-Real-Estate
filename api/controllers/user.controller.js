@@ -53,4 +53,24 @@ export const updateUser = async (req, res, next) => {
       console.error('Error in updateUser:', error); // Log the error
       next(error);
     }
-  };
+};
+
+export const deleteUser = async (req,res,next) => {
+  if(req.user.id !== req.params.id){
+    return next(errorHandler(401, 'You can only delete your own account!'));
+  }
+
+  try {
+    const deletedUser = await User.findByIdAndDelete(req.params.id);
+    if (!deletedUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    res.clearCookie('access_token')
+    res.status(200).json({ success: true, message: 'User has been deleted' });
+  } catch (error) {
+    console.error('Error in deleteUser:', error); // Log the error
+    next(error);
+  }
+
+}
+
