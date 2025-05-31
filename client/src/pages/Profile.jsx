@@ -12,6 +12,8 @@ export default function Profile() {
     password: '',
   });
   const [updateSuccess, setUpdateSuccess] = useState(false);
+  const [showListingErrors, setShowListingErrors] = useState(false);
+  const [listings, setListings] = useState([]);
   
 
   const dispatch = useDispatch();
@@ -80,6 +82,37 @@ export default function Profile() {
     }
   }
 
+  const handleShowListings = async () => {
+    try {
+      setShowListingErrors(false);
+      const res = await fetch(`/api/users/listings/${currentUser._id}`);
+      const data = await res.json();
+      if (data.success === false) {
+        setShowListingErrors(true);
+        return;
+      }
+      setListings(data);
+    } catch (error) {
+      setShowListingErrors(true);
+    }
+  }
+
+  const handleDeleteListing = async (listingId) => {
+    try {
+      const res = await fetch(`/api/listing/delete/${listingId}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success === false) {
+        console.log("error in deleting listing :" , data.message);
+        return;
+      }
+      setListings((prev) => prev.filter((listing) => listing._id !== listingId));
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   return (
     <div className="max-w-lg mx-auto p-3">
       <h1 className="text-3xl font-semibold text-center my-7">Profile</h1>
@@ -131,6 +164,35 @@ export default function Profile() {
       <p className="text-green-700 mt-5">
         {updateSuccess ? 'Profile updated successfully' : ''}
       </p>
+
+      <button onClick={handleShowListings} className='text-green-700 w-full cursor-pointer'>Show Listings</button>
+      <p className="text-red-700 mt-5">
+        {showListingErrors ? 'Error fetching listings' : ''}
+      </p>
+      { listings && listings.length > 0 && (
+        <div className="flex flex-col">
+          <h1 className="text-2xl mt-7 text-center font-semibold">Your Listings</h1>
+        { 
+        listings.map((listing) => (
+          <div key={listing._id} className="border mt-5 p-3 flex justify-between items-center rounded-lg gap-4">
+            <Link to={`/listing/${listing._id}`}>
+              <img
+                src={listing.imageUrls[0]}
+                alt="Listing Cover"
+                className="w-16 h-16 object-contain"
+              />
+            </Link>
+            <Link to={`/listing/${listing._id}`}>
+              <h2 className="text-slate-700 flex-1 hover:underline truncate font-semibold">{listing.name}</h2>
+            </Link>
+            <div className='flex flex-col items-center'>
+              <button onClick={()=>handleDeleteListing(listing._id)} className='text-red-700 uppercase cursor-pointer'>Delete</button>
+              <Link to={`/update-listing/${listing._id}`} className='text-green-700 uppercase cursor-pointer'>Edit</Link>
+            </div>
+          </div>
+        ))}
+        </div>
+      )}
     </div>
   );
 }

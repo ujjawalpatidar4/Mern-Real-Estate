@@ -1,10 +1,13 @@
 import express from "express";
-import { createListing, upload, uploadTempImages, cleanupTempImages } from '../controllers/listing.controller.js'; 
+import { createListing,upload, uploadCloudinaryImages ,deleteListing , updateListing , getListing} from '../controllers/listing.controller.js'; 
+import { verifyToken } from '../utils/verfiyUser.js';
 
 const router = express.Router();
 
-router.post('/upload-temp', upload.array('images', 6), uploadTempImages);
-router.post('/cleanup-temp', express.json(), cleanupTempImages);
-router.post('/create', express.json(), createListing);
+router.post('/upload-cloudinary', upload.array('images', 6), uploadCloudinaryImages);
+router.post('/create', verifyToken, createListing);
+router.delete('/delete/:id',verifyToken,deleteListing)
+router.post('/update/:id', verifyToken,updateListing);
+router.get('/get/:id', getListing);
 
 export default router;

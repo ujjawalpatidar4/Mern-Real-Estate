@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import {useNavigate} from 'react-router-dom';
+import {useNavigate,useParams} from 'react-router-dom';
 
 export default function CreateListing() {
   const { currentUser } = useSelector((state) => state.user);
   const navigate = useNavigate();
+  const params = useParams();
   const [files, setFiles] = useState([]);
   const [cloudImageUrls, setCloudImageUrls] = useState([]);
   const [formData, setFormData] = useState({
@@ -22,6 +23,25 @@ export default function CreateListing() {
   });
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+
+
+    useEffect(() => {
+        const fetchListing = async () => {
+            try {
+                const res = await fetch(`/api/listing/get/${params.listingid}`);
+                const data = await res.json();
+                if (res.ok) {
+                    setFormData(data);
+                    setCloudImageUrls(data.imageUrls);
+                } else {
+                    setError(data.message || 'Failed to fetch listing');
+                }
+            } catch {
+                setError('Failed to fetch listing');
+            }
+        };
+        fetchListing();
+    }, []);
 
   const handleChange = (e) => {
     const { id, value, type, checked } = e.target;
@@ -77,7 +97,7 @@ export default function CreateListing() {
       setUploading(false);
       return setError('Regular price must be greater than or equal to discount price');
     }
-      const res = await fetch('/api/listing/create', {
+      const res = await fetch(`/api/listing/update/${params.listingid}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -102,7 +122,7 @@ export default function CreateListing() {
   return (
     <main className='p-3 max-w-4xl mx-auto'>
       <h1 className='text-3xl font-semibold text-center my-7'>
-        Create a Listing
+        Update a Listing
       </h1>
       <form
         className='flex flex-col sm:flex-row gap-4'
@@ -239,7 +259,7 @@ export default function CreateListing() {
               />
               <div className='flex flex-col items-center'>
                 <p>Regular price</p>
-                {formData.type==='rent' ? <span className='text-xs'>(₹ / month)</span> : <span className='text-xs'>(₹)</span>}
+                {formData.type=='rent' ? <span className='text-xs'>(₹ / month)</span> : <span className='text-xs'>(₹)</span>}
               </div>
             </div>
             {formData.offer && (
@@ -313,7 +333,7 @@ export default function CreateListing() {
             disabled={uploading}
             type='submit'
           >
-            {uploading ? "Creating..." : "Create Listing"}
+            {uploading ? "Updating..." : "Update Listing"}
           </button>
           
         </div>
