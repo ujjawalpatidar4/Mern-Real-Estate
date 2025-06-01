@@ -1,2 +1,10 @@
-MONGO="your_Mongo_uri"
-JWT_SECRET="your_jwt_secret"
+MONGO=your_Mongo_uri
+JWT_SECRET=your_jwt_secret
+CLOUDINARY_CLOUD_NAME=cloud_name
+CLOUDINARY_API_KEY=api_key
+CLOUDINARY_API_SECRET=api_secret
+EMAIL_USER=your_email_id
+EMAIL_PASS=your_email_password
+
+[not in collans ""]
+[EMAIL_PASS may not work, because it don't use real mail password, instead you have to enable 2FA and Generate a Gmail App Password] 
