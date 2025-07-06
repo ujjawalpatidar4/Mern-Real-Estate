@@ -6,6 +6,7 @@ import AuthRouter from './routes/auth.route.js';
 import ListingRouter from './routes/listing.route.js'
 import cookieParser from 'cookie-parser';
 import ContactRouter from './routes/contact.route.js';
+import path from 'path';
 
 
 
@@ -18,10 +19,13 @@ mongoose.connect(process.env.MONGO).then(() => {
     console.error('Error connecting to MongoDB:', error);
 });
 
+const __dirname = path.resolve();
+
 // Middleware
 app.use(express.json());
 
 app.use(cookieParser());
+
 
 // Routes
 app.use('/api/users', UserRouter);
@@ -29,10 +33,14 @@ app.use('/api/auth', AuthRouter);
 app.use('/api/listing' , ListingRouter);
 app.use('/api/contact', ContactRouter);
 
-// Start the server
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+
+app.use(express.static(path.join(__dirname, '/client/dist')));
+
+// app.get('*', (req, res) => {
+//     console.log('Catch-all hit:', req.originalUrl);
+//   res.sendFile(path.join(__dirname, 'client', 'dist', 'index.html'));
+// })
+
 
 
 
@@ -49,4 +57,9 @@ app.use((err, req, res, next) => {
 })
 
 
+
+// Start the server
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});
 
